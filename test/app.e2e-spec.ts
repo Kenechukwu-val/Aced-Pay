@@ -23,6 +23,46 @@ describe('AppController (e2e)', () => {
     });
   });
 
+  it('/plans (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/plans')
+      .expect(200)
+      .expect([
+        {
+          id: 'basic',
+          name: 'Basic',
+          price: 5000,
+          interval: 'month',
+        },
+        {
+          id: 'pro',
+          name: 'Pro',
+          price: 15000,
+          interval: 'month',
+        },
+      ]);
+  });
+
+  it('/plans/:id (GET)', () => {
+    return request(app.getHttpServer()).get('/plans/pro').expect(200).expect({
+      id: 'pro',
+      name: 'Pro',
+      price: 15000,
+      interval: 'month',
+    });
+  });
+
+  it('/plans/:id (GET) - not found', () => {
+    return request(app.getHttpServer())
+      .get('/plans/non-existing')
+      .expect(404)
+      .expect({
+        statusCode: 404,
+        message: "Plan with id 'non-existing' not found",
+        error: 'Not Found',
+      });
+  });
+
   afterEach(async () => {
     await app.close();
   });
