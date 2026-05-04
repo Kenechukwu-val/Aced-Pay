@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PlansController } from './plans.controller';
 import { PlansService } from './plans.service';
+import { NotFoundException } from '@nestjs/common';
 
 describe('PlansController', () => {
   let controller: PlansController;
@@ -45,6 +46,12 @@ describe('PlansController', () => {
         price: 15000,
         interval: 'month',
       });
+    });
+
+    it('should throw NotFoundException for non-existing plan id', () => {
+      expect(() => controller.findOne('non-existing')).toThrow(
+        NotFoundException,
+      );
     });
   });
 });

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PlansService } from './plans.service';
+import { NotFoundException } from '@nestjs/common';
 
 describe('PlansService', () => {
   let service: PlansService;
@@ -45,8 +46,8 @@ describe('PlansService', () => {
       });
     });
 
-    it('should return undefined for non-existing plan id', () => {
-      expect(service.findOne('non-existing')).toBeUndefined();
+    it('should throw NotFoundException for non-existing plan id', () => {
+      expect(() => service.findOne('non-existing')).toThrow(NotFoundException);
     });
   });
 });

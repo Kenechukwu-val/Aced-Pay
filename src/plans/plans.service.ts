@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 type Plan = {
   id: string;
@@ -28,7 +28,13 @@ export class PlansService {
     return this.plans;
   }
 
-  findOne(id: string) {
-    return this.plans.find((plan) => plan.id === id);
+  findOne(id: string): Plan {
+    const plan = this.plans.find((p) => p.id === id);
+
+    if (!plan) {
+      throw new NotFoundException(`Plan with id '${id}' not found`);
+    }
+
+    return plan;
   }
 }
