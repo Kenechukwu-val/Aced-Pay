@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PlansController } from './plans.controller';
+import { PlansService } from './plans.service';
 
 describe('PlansController', () => {
   let controller: PlansController;
@@ -7,6 +8,7 @@ describe('PlansController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PlansController],
+      providers: [PlansService],
     }).compile();
 
     controller = module.get<PlansController>(PlansController);
@@ -14,5 +16,24 @@ describe('PlansController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  describe('findAll', () => {
+    it('should return an array of plans', () => {
+      expect(controller.findAll()).toEqual([
+        {
+          id: 'basic',
+          name: 'Basic',
+          price: 5000,
+          interval: 'month',
+        },
+        {
+          id: 'pro',
+          name: 'Pro',
+          price: 15000,
+          interval: 'month',
+        },
+      ]);
+    });
   });
 });

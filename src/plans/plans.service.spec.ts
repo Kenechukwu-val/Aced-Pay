@@ -15,4 +15,23 @@ describe('PlansService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
+
+  describe('findAll', () => {
+    it('should return an array of plans', () => {
+      expect(service.findAll()).toEqual([
+        {
+          id: 'basic',
+          name: 'Basic',
+          price: 5000,
+          interval: 'month',
+        },
+        {
+          id: 'pro',
+          name: 'Pro',
+          price: 15000,
+          interval: 'month',
+        },
+      ]);
+    });
+  });
 });
