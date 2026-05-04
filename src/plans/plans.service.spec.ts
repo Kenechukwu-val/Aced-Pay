@@ -34,4 +34,19 @@ describe('PlansService', () => {
       ]);
     });
   });
+
+  describe('findOne', () => {
+    it('should return a plan by id', () => {
+      expect(service.findOne('basic')).toEqual({
+        id: 'basic',
+        name: 'Basic',
+        price: 5000,
+        interval: 'month',
+      });
+    });
+
+    it('should return undefined for non-existing plan id', () => {
+      expect(service.findOne('non-existing')).toBeUndefined();
+    });
+  });
 });

@@ -36,4 +36,15 @@ describe('PlansController', () => {
       ]);
     });
   });
+
+  describe('findOne', () => {
+    it('should return a plan by id', () => {
+      expect(controller.findOne('pro')).toEqual({
+        id: 'pro',
+        name: 'Pro',
+        price: 15000,
+        interval: 'month',
+      });
+    });
+  });
 });

@@ -27,4 +27,8 @@ export class PlansService {
   findAll(): Plan[] {
     return this.plans;
   }
+
+  findOne(id: string) {
+    return this.plans.find((plan) => plan.id === id);
+  }
 }
