@@ -63,6 +63,26 @@ describe('AppController (e2e)', () => {
       });
   });
 
+  it('/plans (POST)', async () => {
+    const newPlan = {
+      id: 'premium',
+      name: 'Premium',
+      price: 25000,
+      interval: 'month',
+    };
+
+    await request(app.getHttpServer())
+      .post('/plans')
+      .send(newPlan)
+      .expect(201)
+      .expect(newPlan);
+
+    await request(app.getHttpServer())
+      .get('/plans/premium')
+      .expect(200)
+      .expect(newPlan);
+  });
+
   afterEach(async () => {
     await app.close();
   });

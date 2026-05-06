@@ -50,4 +50,16 @@ describe('PlansService', () => {
       expect(() => service.findOne('non-existing')).toThrow(NotFoundException);
     });
   });
+
+  describe('create', () => {
+    it('should create and return a new plan', () => {
+      const newPlan = {
+        id: 'premium',
+        name: 'Premium',
+        price: 25000,
+        interval: 'month' as const,
+      };
+      expect(service.create(newPlan)).toEqual(newPlan);
+    });
+  });
 });

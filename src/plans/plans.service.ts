@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreatePlanDto } from './create-plan.dto';
 
 type Plan = {
   id: string;
@@ -36,5 +37,10 @@ export class PlansService {
     }
 
     return plan;
+  }
+
+  create(createPlanDto: CreatePlanDto): Plan {
+    this.plans.push(createPlanDto);
+    return createPlanDto;
   }
 }

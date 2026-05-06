@@ -1,4 +1,5 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { CreatePlanDto } from './create-plan.dto';
 import { PlansService } from './plans.service';
 
 @Controller('plans')
@@ -13,5 +14,10 @@ export class PlansController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.plansService.findOne(id);
+  }
+
+  @Post()
+  create(@Body() createPlanDto: CreatePlanDto) {
+    return this.plansService.create(createPlanDto);
   }
 }

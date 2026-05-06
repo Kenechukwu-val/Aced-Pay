@@ -54,4 +54,16 @@ describe('PlansController', () => {
       );
     });
   });
+
+  describe('create', () => {
+    it('should create and return a new plan', () => {
+      const newPlan = {
+        id: 'premium',
+        name: 'Premium',
+        price: 25000,
+        interval: 'month' as const,
+      };
+      expect(controller.create(newPlan)).toEqual(newPlan);
+    });
+  });
 });
