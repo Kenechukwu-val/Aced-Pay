@@ -61,15 +61,15 @@ describe('PlansService', () => {
       };
       expect(service.create(newPlan)).toEqual(newPlan);
     });
-  });
 
-  it('should throw ConflictException when creating a plan with an existing id', () => {
-    const duplicatePan = {
-      id: 'basic',
-      name: 'Basic Duplicate',
-      price: 7000,
-      interval: 'month' as const,
-    };
-    expect(() => service.create(duplicatePan)).toThrow(ConflictException);
+    it('should throw ConflictException when creating a plan with an existing id', () => {
+      const duplicatePlan = {
+        id: 'basic',
+        name: 'Basic Duplicate',
+        price: 7000,
+        interval: 'month' as const,
+      };
+      expect(() => service.create(duplicatePlan)).toThrow(ConflictException);
+    });
   });
 });
