@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePlanDto } from './create-plan.dto';
 
 type Plan = {
@@ -40,6 +44,14 @@ export class PlansService {
   }
 
   create(createPlanDto: CreatePlanDto): Plan {
+    const existingPlan = this.plans.find((p) => p.id === createPlanDto.id);
+
+    if (existingPlan) {
+      throw new ConflictException(
+        `Plan with id '${createPlanDto.id}' already exists`,
+      );
+    }
+
     this.plans.push(createPlanDto);
     return createPlanDto;
   }
