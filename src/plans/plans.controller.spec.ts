@@ -65,15 +65,15 @@ describe('PlansController', () => {
       };
       expect(controller.create(newPlan)).toEqual(newPlan);
     });
-  });
 
-  it('should throw ConflictException when creating a plan with an existing id', () => {
-    const duplicatePlan = {
-      id: 'basic',
-      name: 'Basic Duplicate',
-      price: 7000,
-      interval: 'month' as const,
-    };
-    expect(() => controller.create(duplicatePlan)).toThrow(ConflictException);
+    it('should throw ConflictException when creating a plan with an existing id', () => {
+      const duplicatePlan = {
+        id: 'basic',
+        name: 'Basic Duplicate',
+        price: 7000,
+        interval: 'month' as const,
+      };
+      expect(() => controller.create(duplicatePlan)).toThrow(ConflictException);
+    });
   });
 });
