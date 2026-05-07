@@ -6,11 +6,11 @@ import { PlansService } from './plans.service';
 export class PlansController {
   constructor(private readonly plansService: PlansService) {}
 
-  @Get()
+  @Get() 
   findAll() {
     return this.plansService.findAll();
   }
-
+  
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.plansService.findOne(id);

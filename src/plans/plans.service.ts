@@ -30,10 +30,12 @@ export class PlansService {
   ];
 
   findAll(): Plan[] {
+    // Returns all plans
     return this.plans;
   }
 
   findOne(id: string): Plan {
+    // Finds a plan by id and throws NotFoundException if not found
     const plan = this.plans.find((p) => p.id === id);
 
     if (!plan) {
@@ -44,6 +46,7 @@ export class PlansService {
   }
 
   create(createPlanDto: CreatePlanDto): Plan {
+    // Creates a new plan and throws ConflictException if a plan with the same id already exists
     const existingPlan = this.plans.find((p) => p.id === createPlanDto.id);
 
     if (existingPlan) {
