@@ -20,7 +20,7 @@ export class SubscriptionsService {
     // Validate user existence
     return this.prisma.subscription.findMany({
       where: { userId },
-      include: { plan: true, payment: true },
+      include: { plan: true, payments: true },
     });
   }
 
@@ -28,7 +28,7 @@ export class SubscriptionsService {
     // Validate subscription existence
     const subscription = await this.prisma.subscription.findUnique({
       where: { id },
-      include: { user: true, plan: true, payment: true },
+      include: { user: true, plan: true, payments: true },
     });
 
     if (!subscription) {
