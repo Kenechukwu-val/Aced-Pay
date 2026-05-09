@@ -8,9 +8,7 @@ import { CreatePlanDto } from './create-plan.dto';
 
 @Injectable()
 export class PlansService {
-  constructor(
-    private readonly prisma: PrismaService
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async findAll() {
     return this.prisma.plan.findMany();
@@ -21,7 +19,7 @@ export class PlansService {
       where: { id },
     });
     if (!plan) {
-      throw new NotFoundException (`Plan with id ${id} not found`);
+      throw new NotFoundException(`Plan with id ${id} not found`);
     }
     return plan;
   }
@@ -30,22 +28,27 @@ export class PlansService {
     const existingPlan = await this.prisma.plan.findUnique({
       where: { name: createPlanDto.name },
     });
-    
+
     if (existingPlan) {
-      throw new ConflictException(`Plan with name '${createPlanDto.name}' already exists`);
-    };
+      throw new ConflictException(
+        `Plan with name '${createPlanDto.name}' already exists`,
+      );
+    }
     return this.prisma.plan.create({
       data: createPlanDto,
     });
   }
 
-  async update(id: string, data: {
-    name?: string;
-    price?: number;
-    interval?: string;
-    description?: string;
-    features?: string;
-  }) {
+  async update(
+    id: string,
+    data: {
+      name?: string;
+      price?: number;
+      interval?: string;
+      description?: string;
+      features?: string;
+    },
+  ) {
     const plan = await this.prisma.plan.findUnique({
       where: { id },
     });
@@ -58,7 +61,9 @@ export class PlansService {
         where: { name: data.name },
       });
       if (existingPlan) {
-        throw new ConflictException(`Plan with name '${data.name}' already exists`);
+        throw new ConflictException(
+          `Plan with name '${data.name}' already exists`,
+        );
       }
     }
     return this.prisma.plan.update({
@@ -74,7 +79,7 @@ export class PlansService {
 
     if (!plan) {
       throw new NotFoundException(`Plan with id '${id}' not found`);
-    } 
+    }
     await this.prisma.plan.delete({
       where: { id },
     });
