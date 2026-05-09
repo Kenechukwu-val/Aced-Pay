@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { SubscriptionsService } from './subscriptions.service';
 
 @Controller('subscriptions')
@@ -26,6 +34,7 @@ export class SubscriptionsController {
   }
 
   @Post(':id/cancel')
+  @HttpCode(200)
   cancel(@Param('id') id: string) {
     return this.subscriptionsService.cancel(id);
   }
