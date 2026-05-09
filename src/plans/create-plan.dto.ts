@@ -1,9 +1,13 @@
-import { IsIn, IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
+import {
+  IsIn,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 
 export class CreatePlanDto {
-  @IsString()
-  id: string;
-
   @IsString()
   @IsNotEmpty()
   name: string;
@@ -14,4 +18,12 @@ export class CreatePlanDto {
 
   @IsIn(['month', 'year'])
   interval: 'month' | 'year';
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsString()
+  @IsOptional()
+  features?: string;
 }
