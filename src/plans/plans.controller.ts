@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { CreatePlanDto } from './create-plan.dto';
 import { PlansService } from './plans.service';
 
@@ -19,5 +19,21 @@ export class PlansController {
   @Post()
   create(@Body() createPlanDto: CreatePlanDto) {
     return this.plansService.create(createPlanDto);
+  }
+
+  @Put(':id')
+  update(@Param('id') id: string, @Body() data: {
+    name?: string;
+    price?: number;
+    interval?: string;
+    description?: string;
+    features?: string;
+  }) {
+    return this.plansService.update(id, data);  
+  }
+
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return this.plansService.delete(id);
   }
 }
