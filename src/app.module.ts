@@ -9,6 +9,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { TenantModule } from './common/tenant/tenant.module';
 import { TenantMiddleware } from './common/tenant/tenant.middleware';
+import { TenantsService } from './tenants/tenants.service';
+import { TenantsController } from './tenants/tenants.controller';
+import { TenantsModule } from './tenants/tenants.module';
 
 @Module({
   imports: [
@@ -19,9 +22,10 @@ import { TenantMiddleware } from './common/tenant/tenant.middleware';
     SubscriptionsModule,
     PaymentsModule,
     PrismaModule,
+    TenantsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, TenantsController],
+  providers: [AppService, TenantsService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
