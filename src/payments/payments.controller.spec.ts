@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { TenantContext } from '../common/tenant/tenant-context';
 
 describe('PaymentsController', () => {
   let controller: PaymentsController;
@@ -14,10 +14,17 @@ describe('PaymentsController', () => {
     updateStatus: jest.fn(),
   };
 
+  const mockTenantContext = {
+    getTenantId: jest.fn().mockReturnValue('tenant-123'),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PaymentsController],
-      providers: [PaymentsService, { provide: PrismaService, useValue: {} }],
+      providers: [
+        PaymentsService,
+        { provide: TenantContext, useValue: mockTenantContext },
+      ],
     })
       .overrideProvider(PaymentsService)
       .useValue(mockService)

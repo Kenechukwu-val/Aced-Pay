@@ -8,18 +8,17 @@ import { NotFoundException } from '@nestjs/common';
 
 describe('PaymentsService', () => {
   let service: PaymentsService;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let prisma: any;
 
   const mockPrisma: any = {
     payment: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
     },
     subscription: {
-      findUnique: jest.fn(),
+      findFirst: jest.fn(),
     },
   };
 
@@ -32,7 +31,6 @@ describe('PaymentsService', () => {
     }).compile();
 
     service = module.get<PaymentsService>(PaymentsService);
-    prisma = module.get(PrismaService);
   });
 
   it('should be defined', () => {
@@ -40,23 +38,24 @@ describe('PaymentsService', () => {
   });
 
   describe('findAll', () => {
-    it('should return all payments', async () => {
+    it('should return all payments for tenant', async () => {
       const payments = [
         { id: '1', subscriptionId: '1', amount: 5000, status: 'completed' },
       ];
       mockPrisma.payment.findMany.mockResolvedValue(payments);
 
-      const result = await service.findAll();
+      const result = await service.findAll('tenant-123');
       expect(result).toEqual(payments);
     });
   });
 
   describe('findBySubscriptionId', () => {
     it('should return payments for a subscription', async () => {
+      mockPrisma.subscription.findFirst.mockResolvedValue({ id: '1' });
       const payments = [{ id: '1', subscriptionId: '1', amount: 5000 }];
       mockPrisma.payment.findMany.mockResolvedValue(payments);
 
-      const result = await service.findBySubscriptionId('1');
+      const result = await service.findBySubscriptionId('1', 'tenant-123');
       expect(result).toEqual(payments);
     });
   });
@@ -64,16 +63,16 @@ describe('PaymentsService', () => {
   describe('findOne', () => {
     it('should return a payment by id', async () => {
       const payment = { id: '1', subscriptionId: '1', amount: 5000 };
-      mockPrisma.payment.findUnique.mockResolvedValue(payment);
+      mockPrisma.payment.findFirst.mockResolvedValue(payment);
 
-      const result = await service.findOne('1');
+      const result = await service.findOne('1', 'tenant-123');
       expect(result).toEqual(payment);
     });
 
     it('should throw NotFoundException if not found', async () => {
-      mockPrisma.payment.findUnique.mockResolvedValue(null);
+      mockPrisma.payment.findFirst.mockResolvedValue(null);
 
-      await expect(service.findOne('non-existing')).rejects.toThrow(
+      await expect(service.findOne('non-existing', 'tenant-123')).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -81,47 +80,47 @@ describe('PaymentsService', () => {
 
   describe('create', () => {
     it('should throw NotFoundException if subscription not found', async () => {
-      mockPrisma.subscription.findUnique.mockResolvedValue(null);
+      mockPrisma.subscription.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.create({ subscriptionId: '1', amount: 5000 }),
+        service.create('tenant-123', { subscriptionId: '1', amount: 5000 }),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('should create a payment', async () => {
-      mockPrisma.subscription.findUnique.mockResolvedValue({ id: '1' });
+      mockPrisma.subscription.findFirst.mockResolvedValue({ id: '1' });
       mockPrisma.payment.create.mockResolvedValue({
         id: '1',
         subscriptionId: '1',
         amount: 5000,
-        status: 'completed',
+        status: 'succeeded',
       });
 
-      const result = await service.create({
+      const result = await service.create('tenant-123', {
         subscriptionId: '1',
         amount: 5000,
       });
-      expect(result.status).toBe('completed');
+      expect(result.status).toBe('succeeded');
     });
   });
 
   describe('updateStatus', () => {
     it('should throw NotFoundException if payment not found', async () => {
-      mockPrisma.payment.findUnique.mockResolvedValue(null);
+      mockPrisma.payment.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.updateStatus('non-existing', 'failed'),
+        service.updateStatus('non-existing', 'failed', 'tenant-123'),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('should update payment status', async () => {
-      mockPrisma.payment.findUnique.mockResolvedValue({ id: '1' });
+      mockPrisma.payment.findFirst.mockResolvedValue({ id: '1' });
       mockPrisma.payment.update.mockResolvedValue({
         id: '1',
         status: 'failed',
       });
 
-      const result = await service.updateStatus('1', 'failed');
+      const result = await service.updateStatus('1', 'failed', 'tenant-123');
       expect(result.status).toBe('failed');
     });
   });

@@ -8,8 +8,6 @@ import { NotFoundException, BadRequestException } from '@nestjs/common';
 
 describe('SubscriptionsService', () => {
   let service: SubscriptionsService;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let prisma: any;
 
   const mockPrisma: any = {
     subscription: {
@@ -19,9 +17,6 @@ describe('SubscriptionsService', () => {
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-    },
-    user: {
-      findUnique: jest.fn(),
     },
     plan: {
       findUnique: jest.fn(),
@@ -37,7 +32,6 @@ describe('SubscriptionsService', () => {
     }).compile();
 
     service = module.get<SubscriptionsService>(SubscriptionsService);
-    prisma = module.get(PrismaService);
   });
 
   it('should be defined', () => {
@@ -45,25 +39,13 @@ describe('SubscriptionsService', () => {
   });
 
   describe('findAll', () => {
-    it('should return all subscriptions', async () => {
+    it('should return all subscriptions for tenant', async () => {
       const subscriptions = [
-        { id: '1', userId: '1', planId: '1', status: 'active' },
+        { id: '1', tenantId: 'tenant-123', planId: '1', status: 'active' },
       ];
       mockPrisma.subscription.findMany.mockResolvedValue(subscriptions);
 
-      const result = await service.findAll();
-      expect(result).toEqual(subscriptions);
-    });
-  });
-
-  describe('findByUser', () => {
-    it('should return subscriptions for a user', async () => {
-      const subscriptions = [
-        { id: '1', userId: '1', planId: '1', status: 'active' },
-      ];
-      mockPrisma.subscription.findMany.mockResolvedValue(subscriptions);
-
-      const result = await service.findByUserId('1');
+      const result = await service.findAll('tenant-123');
       expect(result).toEqual(subscriptions);
     });
   });
@@ -72,84 +54,84 @@ describe('SubscriptionsService', () => {
     it('should return a subscription by id', async () => {
       const subscription = {
         id: '1',
-        userId: '1',
+        tenantId: 'tenant-123',
         planId: '1',
         status: 'active',
       };
-      mockPrisma.subscription.findUnique.mockResolvedValue(subscription);
+      mockPrisma.subscription.findFirst.mockResolvedValue(subscription);
 
-      const result = await service.findOne('1');
+      const result = await service.findOne('1', 'tenant-123');
       expect(result).toEqual(subscription);
     });
 
     it('should throw NotFoundException if not found', async () => {
-      mockPrisma.subscription.findUnique.mockResolvedValue(null);
+      mockPrisma.subscription.findFirst.mockResolvedValue(null);
 
-      await expect(service.findOne('non-existing')).rejects.toThrow(
+      await expect(service.findOne('non-existing', 'tenant-123')).rejects.toThrow(
         NotFoundException,
       );
     });
   });
 
   describe('create', () => {
-    it('should throw NotFoundException if user not found', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+    it('should throw NotFoundException if plan not found', async () => {
+      mockPrisma.plan.findUnique.mockResolvedValue(null);
 
-      await expect(service.create('user-1', 'plan-1')).rejects.toThrow(
+      await expect(service.create('tenant-123', 'plan-1')).rejects.toThrow(
         NotFoundException,
       );
     });
 
-    it('should throw BadRequestException if user has active subscription', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: '1' });
+    it('should throw BadRequestException if tenant has active subscription', async () => {
       mockPrisma.plan.findUnique.mockResolvedValue({
         id: '1',
         interval: 'month',
+        trialDays: 14,
       });
       mockPrisma.subscription.findFirst.mockResolvedValue({ id: '1' });
 
-      await expect(service.create('user-1', 'plan-1')).rejects.toThrow(
+      await expect(service.create('tenant-123', 'plan-1')).rejects.toThrow(
         BadRequestException,
       );
     });
 
-    it('should create a subscription', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ id: '1' });
+    it('should create a subscription with trial', async () => {
       mockPrisma.plan.findUnique.mockResolvedValue({
         id: '1',
         interval: 'month',
+        trialDays: 14,
       });
       mockPrisma.subscription.findFirst.mockResolvedValue(null);
       mockPrisma.subscription.create.mockResolvedValue({
         id: '1',
-        userId: 'user-1',
+        tenantId: 'tenant-123',
         planId: 'plan-1',
-        status: 'active',
+        status: 'trialing',
       });
 
-      const result = await service.create('user-1', 'plan-1');
-      expect(result.status).toBe('active');
+      const result = await service.create('tenant-123', 'plan-1');
+      expect(result.status).toBe('trialing');
     });
   });
 
   describe('cancel', () => {
     it('should throw NotFoundException if subscription not found', async () => {
-      mockPrisma.subscription.findUnique.mockResolvedValue(null);
+      mockPrisma.subscription.findFirst.mockResolvedValue(null);
 
-      await expect(service.cancel('non-existing')).rejects.toThrow(
+      await expect(service.cancel('non-existing', 'tenant-123')).rejects.toThrow(
         NotFoundException,
       );
     });
 
     it('should cancel a subscription', async () => {
-      mockPrisma.subscription.findUnique.mockResolvedValue({ id: '1' });
+      mockPrisma.subscription.findFirst.mockResolvedValue({ id: '1' });
       mockPrisma.subscription.update.mockResolvedValue({
         id: '1',
-        status: 'cancelled',
+        status: 'canceled',
       });
 
-      const result = await service.cancel('1');
-      expect(result.status).toBe('cancelled');
+      const result = await service.cancel('1', 'tenant-123');
+      expect(result.status).toBe('canceled');
     });
   });
 });
