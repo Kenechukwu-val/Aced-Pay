@@ -10,7 +10,6 @@ export class SubscriptionsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(tenantId: string) {
-    // Validate tenant existence
     return this.prisma.subscription.findMany({
       where: { tenantId },
       include: { plan: true },
@@ -18,8 +17,7 @@ export class SubscriptionsService {
   }
 
   async findOne(id: string, tenantId: string) {
-    // Validate subscription existence
-    const subscription = await this.prisma.subscription.findUnique({
+    const subscription = await this.prisma.subscription.findFirst({
       where: { id, tenantId },
       include: { plan: true, payments: true },
     });
@@ -31,13 +29,11 @@ export class SubscriptionsService {
   }
 
   async create(tenantId: string, planId: string) {
-    // Validate plan existence
     const plan = await this.prisma.plan.findUnique({ where: { id: planId } });
     if (!plan) {
       throw new NotFoundException(`Plan with id '${planId}' not found`);
     }
 
-    // Check for existing active subscription for the tenant
     const activeSubscription = await this.prisma.subscription.findFirst({
       where: { tenantId, status: 'active' },
     });
@@ -46,7 +42,7 @@ export class SubscriptionsService {
       throw new BadRequestException(`Tenant already has an active subscription`);
     }
 
-    //Calculate trial period end date (e.g., 14 days from now)
+    // Calculate trial period end
     const trialEndDate = new Date();
     trialEndDate.setDate(trialEndDate.getDate() + plan.trialDays);
 
@@ -61,7 +57,7 @@ export class SubscriptionsService {
       data: {
         tenantId,
         planId,
-        status: 'trailing',
+        status: 'trialing',
         trialEndDate,
         currentPeriodStart,
         currentPeriodEnd,
@@ -72,7 +68,7 @@ export class SubscriptionsService {
   }
 
   async cancel(id: string, tenantId: string) {
-    const subscription = await this.prisma.subscription.findUnique({
+    const subscription = await this.prisma.subscription.findFirst({
       where: { id, tenantId },
     });
 
@@ -83,7 +79,7 @@ export class SubscriptionsService {
     return this.prisma.subscription.update({
       where: { id },
       data: { 
-        status: 'cancelled', 
+        status: 'canceled',
         canceledAt: new Date(),
         cancelAtPeriodEnd: true,
       },
@@ -91,7 +87,7 @@ export class SubscriptionsService {
   }
 
   async delete(id: string, tenantId: string) {
-    const subscription = await this.prisma.subscription.findUnique({
+    const subscription = await this.prisma.subscription.findFirst({
       where: { id, tenantId },
     });
 

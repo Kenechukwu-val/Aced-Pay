@@ -7,7 +7,9 @@ export class PaymentsService {
 
   async findAll(tenantId: string) {
     return this.prisma.payment.findMany({
-      where: { subscription: { tenantId } },
+      where: {
+        subscription: { tenantId },
+      },
       include: {
         subscription: {
           include: { plan: true },
@@ -22,9 +24,7 @@ export class PaymentsService {
     });
 
     if (!subscription) {
-      throw new NotFoundException(
-        `Subscription  not found`,
-      );
+      throw new NotFoundException(`Subscription not found`);
     }
 
     return this.prisma.payment.findMany({
@@ -49,13 +49,16 @@ export class PaymentsService {
     return payment;
   }
 
-  async create(tenantId: string, data: {
-    subscriptionId: string;
-    amount: number;
-    currency?: string;
-    paymentMethod?: string;
-    transactionId?: string;
-  }) {
+  async create(
+    tenantId: string,
+    data: {
+      subscriptionId: string;
+      amount: number;
+      currency?: string;
+      paymentMethod?: string;
+      transactionId?: string;
+    }
+  ) {
     const subscription = await this.prisma.subscription.findFirst({
       where: { id: data.subscriptionId, tenantId },
     });
