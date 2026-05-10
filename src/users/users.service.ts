@@ -49,7 +49,7 @@ export class UsersService {
       where: { email: loginDto.email },
     });
 
-    if (!user) {
+    if (!user?.password) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -123,7 +123,17 @@ export class UsersService {
     return { message: 'User deleted successfully' };
   }
 
-  private generateToken(userId: string, email: string) {
-    return this.jwtService.sign({ sub: userId, email });
+  private generateToken(
+    userId: string,
+    email: string,
+    tenantId?: string,
+    role?: string,
+  ) {
+    return this.jwtService.sign({
+      sub: userId,
+      email,
+      tenantId: tenantId || null,
+      role: role || null,
+    });
   }
 }
