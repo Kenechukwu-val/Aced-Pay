@@ -5,28 +5,39 @@ import { PrismaService } from '../prisma/prisma.service';
 export class PaymentsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll() {
+  async findAll(tenantId: string) {
     return this.prisma.payment.findMany({
+      where: { subscription: { tenantId } },
       include: {
         subscription: {
-          include: { user: true, plan: true },
+          include: { plan: true },
         },
       },
     });
   }
 
-  async findBySubscriptionId(subscriptionId: string) {
+  async findBySubscriptionId(subscriptionId: string, tenantId: string) {
+    const subscription = await this.prisma.subscription.findFirst({
+      where: { id: subscriptionId, tenantId },
+    });
+
+    if (!subscription) {
+      throw new NotFoundException(
+        `Subscription  not found`,
+      );
+    }
+
     return this.prisma.payment.findMany({
       where: { subscriptionId },
     });
   }
 
-  async findOne(id: string) {
-    const payment = await this.prisma.payment.findUnique({
-      where: { id },
+  async findOne(id: string, tenantId: string) {
+    const payment = await this.prisma.payment.findFirst({
+      where: { id, subscription: { tenantId } },
       include: {
         subscription: {
-          include: { user: true, plan: true },
+          include: { plan: true },
         },
       },
     });
@@ -38,15 +49,15 @@ export class PaymentsService {
     return payment;
   }
 
-  async create(data: {
+  async create(tenantId: string, data: {
     subscriptionId: string;
     amount: number;
     currency?: string;
     paymentMethod?: string;
     transactionId?: string;
   }) {
-    const subscription = await this.prisma.subscription.findUnique({
-      where: { id: data.subscriptionId },
+    const subscription = await this.prisma.subscription.findFirst({
+      where: { id: data.subscriptionId, tenantId },
     });
 
     if (!subscription) {
@@ -62,15 +73,15 @@ export class PaymentsService {
         currency: data.currency || 'USD',
         paymentMethod: data.paymentMethod,
         transactionId: data.transactionId,
-        status: 'completed',
+        status: 'succeeded',
         paidAt: new Date(),
       },
     });
   }
 
-  async updateStatus(id: string, status: string) {
-    const payment = await this.prisma.payment.findUnique({
-      where: { id },
+  async updateStatus(id: string, status: string, tenantId: string) {
+    const payment = await this.prisma.payment.findFirst({
+      where: { id, subscription: { tenantId } },
     });
 
     if (!payment) {

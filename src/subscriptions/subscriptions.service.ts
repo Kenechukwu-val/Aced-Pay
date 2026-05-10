@@ -9,26 +9,19 @@ import { PrismaService } from '../prisma/prisma.service';
 export class SubscriptionsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll() {
-    // Validate subscriptions existence
+  async findAll(tenantId: string) {
+    // Validate tenant existence
     return this.prisma.subscription.findMany({
-      include: { user: true, plan: true },
+      where: { tenantId },
+      include: { plan: true },
     });
   }
 
-  async findByUserId(userId: string) {
-    // Validate user existence
-    return this.prisma.subscription.findMany({
-      where: { userId },
-      include: { plan: true, payments: true },
-    });
-  }
-
-  async findOne(id: string) {
+  async findOne(id: string, tenantId: string) {
     // Validate subscription existence
     const subscription = await this.prisma.subscription.findUnique({
-      where: { id },
-      include: { user: true, plan: true, payments: true },
+      where: { id, tenantId },
+      include: { plan: true, payments: true },
     });
 
     if (!subscription) {
@@ -37,45 +30,50 @@ export class SubscriptionsService {
     return subscription;
   }
 
-  async create(userId: string, planId: string) {
-    // Validate user and plan existence
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-      throw new NotFoundException(`User with id '${userId}' not found`);
-    }
-
+  async create(tenantId: string, planId: string) {
+    // Validate plan existence
     const plan = await this.prisma.plan.findUnique({ where: { id: planId } });
     if (!plan) {
       throw new NotFoundException(`Plan with id '${planId}' not found`);
     }
 
+    // Check for existing active subscription for the tenant
     const activeSubscription = await this.prisma.subscription.findFirst({
-      where: { userId, status: 'active' },
+      where: { tenantId, status: 'active' },
     });
 
     if (activeSubscription) {
-      throw new BadRequestException(`User already has an active subscription`);
+      throw new BadRequestException(`Tenant already has an active subscription`);
     }
 
-    // Calculate end date based on plan interval
-    const endDate = new Date();
-    endDate.setMonth(endDate.getMonth() + (plan.interval === 'year' ? 12 : 1));
+    //Calculate trial period end date (e.g., 14 days from now)
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialEndDate.getDate() + plan.trialDays);
+
+    // Calculate current period
+    const currentPeriodStart = new Date();
+    const currentPeriodEnd = new Date();
+    currentPeriodEnd.setMonth(
+      currentPeriodEnd.getMonth() + (plan.interval === 'year' ? 12 : 1)
+    );
 
     return this.prisma.subscription.create({
       data: {
-        userId,
+        tenantId,
         planId,
-        status: 'active',
-        startDate: new Date(),
-        endDate,
+        status: 'trailing',
+        trialEndDate,
+        currentPeriodStart,
+        currentPeriodEnd,
+        gracePeriodDays: 7,
       },
       include: { plan: true },
     });
   }
 
-  async cancel(id: string) {
+  async cancel(id: string, tenantId: string) {
     const subscription = await this.prisma.subscription.findUnique({
-      where: { id },
+      where: { id, tenantId },
     });
 
     if (!subscription) {
@@ -84,13 +82,17 @@ export class SubscriptionsService {
 
     return this.prisma.subscription.update({
       where: { id },
-      data: { status: 'cancelled' },
+      data: { 
+        status: 'cancelled', 
+        canceledAt: new Date(),
+        cancelAtPeriodEnd: true,
+      },
     });
   }
 
-  async delete(id: string) {
+  async delete(id: string, tenantId: string) {
     const subscription = await this.prisma.subscription.findUnique({
-      where: { id },
+      where: { id, tenantId },
     });
 
     if (!subscription) {
