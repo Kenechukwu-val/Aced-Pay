@@ -1,41 +1,53 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Body,
+} from '@nestjs/common';
 import { PaymentsService } from './payments.service';
+import { TenantContext } from '../common/tenant/tenant-context';
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(private paymentsService: PaymentsService) {}
+  constructor(
+    private readonly paymentsService: PaymentsService,
+    private readonly tenantContext: TenantContext,
+  ) {}
 
-  @Get()
-  async findAll() {
-    return this.paymentsService.findAll();
+  private getTenantId(): string {
+    const tenantId = this.tenantContext.getTenantId();
+    if (!tenantId) {
+      throw new Error('Tenant context not available');
+    }
+    return tenantId;
   }
 
-  @Get('subscription/:subscriptionId')
-  async findBySubscriptionId(@Param('subscriptionId') subscriptionId: string) {
-    return this.paymentsService.findBySubscriptionId(subscriptionId);
+  @Get()
+  findAll() {
+    return this.paymentsService.findAll(this.getTenantId());
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.paymentsService.findOne(id);
+  findOne(@Param('id') id: string) {
+    return this.paymentsService.findOne(id, this.getTenantId());
+  }
+
+  @Get('subscription/:subscriptionId')
+  findBySubscriptionId(@Param('subscriptionId') subscriptionId: string) {
+    return this.paymentsService.findBySubscriptionId(
+      subscriptionId,
+      this.getTenantId(),
+    );
   }
 
   @Post()
-  async create(
-    @Body()
-    data: {
-      subscriptionId: string;
-      amount: number;
-      currency?: string;
-      paymentMethod?: string;
-      transactionId?: string;
-    },
-  ) {
-    return this.paymentsService.create(data);
+  create(@Body() data: any) {
+    return this.paymentsService.create(this.getTenantId(), data);
   }
 
   @Post(':id/status')
-  async updateStatus(@Param('id') id: string, @Body('status') status: string) {
-    return this.paymentsService.updateStatus(id, status);
+  updateStatus(@Param('id') id: string, @Body('status') status: string) {
+    return this.paymentsService.updateStatus(id, status, this.getTenantId());
   }
 }
