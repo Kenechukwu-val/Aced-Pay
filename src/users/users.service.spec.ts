@@ -19,6 +19,13 @@ describe('UsersService', () => {
       findUnique: jest.fn(),
       create: jest.fn(),
     },
+    tenant: {
+      create: jest.fn(),
+    },
+    tenantMember: {
+      create: jest.fn(),
+    },
+    $transaction: jest.fn((callback) => callback(mockPrisma)),
   };
 
   const mockJwtService = {
@@ -53,17 +60,22 @@ describe('UsersService', () => {
     });
 
     it('should create a user with token', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null);
-      mockPrisma.user.create.mockResolvedValue({
+      const mockUser = {
         id: '1',
         email: 'test@test.com',
-        password: 'hashed',
         name: 'Test',
-      });
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+        mockPrisma.user.findUnique.mockResolvedValue(null);
+        mockPrisma.user.create.mockResolvedValue(mockUser);
+        mockPrisma.tenant.create.mockResolvedValue({ id: 'tenant-1', name: 'Test Workspace', slug: 'test' });
+        mockPrisma.tenantMember.create.mockResolvedValue({ id: '1', role: 'owner' });
 
       const result = await service.create({
         email: 'test@test.com',
-        password: '123456',
+        password: 'password123',
         name: 'Test',
       });
 
