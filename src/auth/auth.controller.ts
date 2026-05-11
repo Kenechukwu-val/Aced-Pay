@@ -75,7 +75,7 @@ export class AuthController {
     @Get('github/callback')
     @UseGuards(AuthGuard('github'))
     async githubAuthRedirect(@Req() req: Request, @Res() res: Response) {
-        // Same logic as Google - copy and adjust
+       
         const githubUser = req.user as any;
         
         let user = await this.prisma.user.findUnique({
