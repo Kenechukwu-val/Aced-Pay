@@ -12,6 +12,8 @@ import { TenantMiddleware } from './common/tenant/tenant.middleware';
 import { TenantsService } from './tenants/tenants.service';
 import { TenantsController } from './tenants/tenants.controller';
 import { TenantsModule } from './tenants/tenants.module';
+import { StripeService } from './stripe/stripe.service';
+import { StripeModule } from './stripe/stripe.module';
 
 @Module({
   imports: [
@@ -23,9 +25,10 @@ import { TenantsModule } from './tenants/tenants.module';
     PaymentsModule,
     PrismaModule,
     TenantsModule,
+    StripeModule,
   ],
   controllers: [AppController, TenantsController],
-  providers: [AppService, TenantsService],
+  providers: [AppService, TenantsService, StripeService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
