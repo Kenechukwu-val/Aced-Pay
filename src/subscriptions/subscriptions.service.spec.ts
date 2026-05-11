@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SubscriptionsService } from './subscriptions.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { StripeService } from '../stripe/stripe.service';
 
 describe('SubscriptionsService', () => {
   let service: SubscriptionsService;
@@ -23,11 +24,26 @@ describe('SubscriptionsService', () => {
     },
   };
 
+  const mockStripeService: any = {
+    createCustomer: jest.fn(),
+    createCheckoutSession: jest.fn(),
+    createCustomerPortalSession: jest.fn(),
+    cancelSubscriptionAtPeriodEnd: jest.fn(),
+     instance: {
+      checkout: {
+        sessions: {
+          retrieve: jest.fn(),
+        },
+      },
+    },
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SubscriptionsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: StripeService, useValue: mockStripeService },
       ],
     }).compile();
 
