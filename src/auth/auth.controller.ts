@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response, Request } from 'express';
-import { UsersService } from '../users/users.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('auth')
