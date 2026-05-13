@@ -10,6 +10,7 @@ import { PaymentsService } from './payments.service';
 import { TenantContext } from '../common/tenant/tenant-context';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { JwtTenantGuard } from '../common/guards/jwt-tenant.guard';
 
 
 @Controller('payments')
@@ -28,21 +29,21 @@ export class PaymentsController {
   }
 
   @Get()
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtTenantGuard, RolesGuard)
   @Roles('owner', 'admin')
   findAll() {
     return this.paymentsService.findAll(this.getTenantId());
   }
 
   @Get(':id')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtTenantGuard, RolesGuard)
   @Roles('owner', 'admin')
   findOne(@Param('id') id: string) {
     return this.paymentsService.findOne(id, this.getTenantId());
   }
 
   @Get('subscription/:subscriptionId')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtTenantGuard, RolesGuard)
   @Roles('owner', 'admin', 'member')
   findBySubscriptionId(@Param('subscriptionId') subscriptionId: string) {
     return this.paymentsService.findBySubscriptionId(
@@ -52,14 +53,14 @@ export class PaymentsController {
   }
 
   @Post()
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtTenantGuard, RolesGuard)
   @Roles('owner', 'admin')
   create(@Body() data: any) {
     return this.paymentsService.create(this.getTenantId(), data);
   }
 
   @Post(':id/status')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtTenantGuard, RolesGuard)
   @Roles('owner', 'admin')
   updateStatus(@Param('id') id: string, @Body('status') status: string) {
     return this.paymentsService.updateStatus(id, status, this.getTenantId());

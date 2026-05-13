@@ -12,34 +12,35 @@ import { CreatePlanDto } from './create-plan.dto';
 import { PlansService } from './plans.service';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { JwtTenantGuard } from '../common/guards/jwt-tenant.guard';
 
 @Controller('plans')
 export class PlansController {
   constructor(private readonly plansService: PlansService) {}
 
   @Get()
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtTenantGuard, RolesGuard)
   @Roles('owner', 'admin', 'member') 
   findAll() {
     return this.plansService.findAll();
   }
 
   @Get(':id')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtTenantGuard, RolesGuard)
   @Roles('owner', 'admin', 'member')
   findOne(@Param('id') id: string) {
     return this.plansService.findOne(id);
   }
 
   @Post()
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtTenantGuard, RolesGuard)
   @Roles('owner')
   create(@Body() createPlanDto: CreatePlanDto) {
     return this.plansService.create(createPlanDto);
   }
 
   @Put(':id')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtTenantGuard, RolesGuard)
   @Roles('owner')
   update(
     @Param('id') id: string,
@@ -56,7 +57,7 @@ export class PlansController {
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtTenantGuard, RolesGuard)
   @Roles('owner')
   delete(@Param('id') id: string) {
     return this.plansService.delete(id);

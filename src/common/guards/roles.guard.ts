@@ -18,7 +18,7 @@ export class RolesGuard implements CanActivate {
         ]);
 
         if (!requiredRoles) {
-            return true; // No roles required, allow access
+            return true;
         }
 
         const userRole = this.tenantContext.getRole();

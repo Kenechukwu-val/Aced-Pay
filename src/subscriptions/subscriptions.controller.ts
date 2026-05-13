@@ -11,6 +11,7 @@ import { SubscriptionsService } from './subscriptions.service';
 import { TenantContext } from '../common/tenant/tenant-context';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { JwtTenantGuard } from '../common/guards/jwt-tenant.guard';
 
 @Controller('subscriptions')
 export class SubscriptionsController {
@@ -20,7 +21,7 @@ export class SubscriptionsController {
   ) {}
 
   @Get()
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtTenantGuard, RolesGuard)
   @Roles('owner', 'admin') // Only owners and admins can view subscriptions for their tenant
   findAll() {
     const tenantId = this.tenantContext.getTenantId();
@@ -31,7 +32,7 @@ export class SubscriptionsController {
   }
 
   @Get(':id')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtTenantGuard, RolesGuard)
   @Roles('owner', 'admin', 'member') // Owners, admins, and members can view subscription details for their tenant
   findOne(@Param('id') id: string) {
     const tenantId = this.tenantContext.getTenantId();
@@ -42,7 +43,7 @@ export class SubscriptionsController {
   }
 
   @Post()
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtTenantGuard, RolesGuard)
   @Roles('owner', 'admin') // Only owners and admins can create subscriptions for their tenant
   create(@Body('planId') planId: string) {
     const tenantId = this.tenantContext.getTenantId();
@@ -53,7 +54,7 @@ export class SubscriptionsController {
   }
 
   @Post(':id/cancel')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtTenantGuard, RolesGuard)
   @Roles('owner', 'admin') // Only owners and admins can cancel subscriptions for their tenant
   cancel(@Param('id') id: string) {
     const tenantId = this.tenantContext.getTenantId();
@@ -64,7 +65,7 @@ export class SubscriptionsController {
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtTenantGuard, RolesGuard)
   @Roles('owner') // Only owners can delete subscriptions for their tenant
   delete(@Param('id') id: string) {
     const tenantId = this.tenantContext.getTenantId();

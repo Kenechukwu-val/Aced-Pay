@@ -14,8 +14,7 @@ import { TenantsController } from './tenants/tenants.controller';
 import { TenantsModule } from './tenants/tenants.module';
 import { StripeService } from './stripe/stripe.service';
 import { StripeModule } from './stripe/stripe.module';
-import { APP_GUARD } from '@nestjs/core';
-import { RolesGuard } from './common/guards/roles.guard';
+import { JwtTenantGuard } from './common/guards/jwt-tenant.guard';
 
 @Module({
   imports: [
@@ -30,7 +29,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     StripeModule,
   ],
   controllers: [AppController, TenantsController],
-  providers: [AppService, { provide: APP_GUARD, useClass: RolesGuard }, TenantsService, StripeService],
+  providers: [AppService, JwtTenantGuard, TenantsService, StripeService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

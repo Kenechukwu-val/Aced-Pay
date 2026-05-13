@@ -22,7 +22,7 @@ export class TenantMiddleware implements NestMiddleware {
   use(req: RequestWithTenant, res: Response, next: NextFunction) {
     const user = req.user as AuthenticatedUser | undefined;
 
-    if (user) {
+    if (user && user.id) {
       req.tenantId = user.tenantId;
       req.userId = user.userId || user.id;
       req.userRole = user.role;

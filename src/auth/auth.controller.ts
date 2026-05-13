@@ -75,7 +75,7 @@ export class AuthController {
         // Generate JWT
         const jwtService = await import('@nestjs/jwt').then(m => m.JwtService);
         const jwt = new jwtService({
-            secret: process.env.JWT_SECRET,
+            secret: process.env.JWT_SECRET_KEY || 'your_secret_key',
         });
 
         const token = jwt.sign({
@@ -144,7 +144,7 @@ export class AuthController {
         // Generate JWT
         const jwtService = await import('@nestjs/jwt').then(m => m.JwtService);
         const jwt = new jwtService({
-            secret: process.env.JWT_SECRET_KEY,
+            secret: process.env.JWT_SECRET_KEY || 'your_secret_key',
         });
 
         const token = jwt.sign({
