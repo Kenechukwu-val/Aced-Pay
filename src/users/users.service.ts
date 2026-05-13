@@ -32,9 +32,9 @@ export class UsersService {
     return this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
+          name: createUserDto.name,
           email: createUserDto.email,
           password: hashedPassword,
-          name: createUserDto.name,
           provider: 'email',
         },
       });
