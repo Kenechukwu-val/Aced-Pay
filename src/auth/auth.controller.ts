@@ -72,6 +72,12 @@ export class AuthController {
         res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
     }
 
+    @Get('github')
+    @UseGuards(AuthGuard('github'))
+    async githubAuth() {
+        // Initiates GitHub OAuth2 login flow
+    }
+
     @Get('github/callback')
     @UseGuards(AuthGuard('github'))
     async githubAuthRedirect(@Req() req: Request, @Res() res: Response) {
