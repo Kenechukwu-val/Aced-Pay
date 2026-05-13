@@ -61,8 +61,12 @@ describe('TenantAccessGuard', () => {
     // Test 4: Route param doesn't match current tenant → deny
     it('should deny access when route param does not match tenant context', () => {
         mockTenantContext.getTenantId.mockReturnValue('tenant-123');
-        const context = mockExecutionContext();
-        context.switchToHttp().getRequest = () => ({ params: { id: 'tenant-456' } });
+        // Create fresh context with mismatched param
+        const context = {
+            switchToHttp: () => ({
+                getRequest: () => ({ params: { id: 'tenant-456' } }),
+            }),
+        };
         expect(() => guard.canActivate(context as any)).toThrow(ForbiddenException);
     });
 

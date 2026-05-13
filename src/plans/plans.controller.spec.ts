@@ -6,6 +6,7 @@ import { PlansController } from './plans.controller';
 import { PlansService } from './plans.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotFoundException } from '@nestjs/common';
+import { RolesGuard } from '../common/guards/roles.guard';
 
 describe('PlansController', () => {
   let controller: PlansController;
@@ -20,6 +21,10 @@ describe('PlansController', () => {
     delete: jest.fn(),
   };
 
+  const mockRolesGuard = {
+    canActivate: jest.fn(() => true),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PlansController],
@@ -27,6 +32,8 @@ describe('PlansController', () => {
     })
       .overrideProvider(PlansService)
       .useValue(mockService)
+      .overrideGuard(RolesGuard)
+      .useValue(mockRolesGuard)
       .compile();
 
     controller = module.get<PlansController>(PlansController);

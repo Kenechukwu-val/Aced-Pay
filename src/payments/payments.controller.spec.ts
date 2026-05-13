@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { TenantContext } from '../common/tenant/tenant-context';
+import { RolesGuard } from '../common/guards/roles.guard';
 
 describe('PaymentsController', () => {
   let controller: PaymentsController;
@@ -18,6 +19,10 @@ describe('PaymentsController', () => {
     getTenantId: jest.fn().mockReturnValue('tenant-123'),
   };
 
+  const mockRolesGuard = {
+    canActivate: jest.fn(() => true),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PaymentsController],
@@ -28,6 +33,8 @@ describe('PaymentsController', () => {
     })
       .overrideProvider(PaymentsService)
       .useValue(mockService)
+      .overrideGuard(RolesGuard)
+      .useValue(mockRolesGuard)
       .compile();
 
     controller = module.get<PaymentsController>(PaymentsController);
