@@ -7,6 +7,7 @@ import { GithubStrategy } from './strategies/github.strategy';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { TenantsModule } from '../tenants/tenants.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PrismaModule } from '../prisma/prisma.module';
     }),
     UsersModule,
     PrismaModule,
+    TenantsModule,
   ],
   controllers: [AuthController],
   providers: [JwtStrategy, GoogleStrategy, GithubStrategy],
