@@ -72,6 +72,6 @@ export class SubscriptionsController {
     if (!tenantId) {
       throw new Error('Tenant context not available');
     }
-    return this.subscriptionsService.delete(tenantId, id);
+    return this.subscriptionsService.delete(id, tenantId);
   }
 }
