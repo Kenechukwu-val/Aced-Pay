@@ -61,7 +61,7 @@ export class SubscriptionsController {
     if (!tenantId) {
       throw new Error('Tenant context not available');
     }
-    return this.subscriptionsService.cancel(id, tenantId);
+    return this.subscriptionsService.cancel(tenantId, id);
   }
 
   @Delete(':id')
@@ -72,6 +72,6 @@ export class SubscriptionsController {
     if (!tenantId) {
       throw new Error('Tenant context not available');
     }
-    return this.subscriptionsService.delete(id, tenantId);
+    return this.subscriptionsService.delete(tenantId, id);
   }
 }
