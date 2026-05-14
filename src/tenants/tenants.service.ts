@@ -80,7 +80,17 @@ export class TenantsService {
         if (!tenant) {
             throw new NotFoundException('Tenant not found');
         }
-        return tenant;
+        // Map members to include 'id' as alias for userId (for use in /members/:id endpoint)
+        return {
+            ...tenant,
+            members: tenant.members.map(m => ({
+                id: m.userId,
+                userId: m.userId,
+                role: m.role,
+                createdAt: m.createdAt,
+                user: m.user,
+            })),
+        };
     }
 
     async inviteMember(tenantId: string, invitingUserId: string, dto: InviteMemberDto) {
