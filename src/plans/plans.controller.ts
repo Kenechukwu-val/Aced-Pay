@@ -27,7 +27,6 @@ export class PlansController {
 
   @Get(':id')
   @UseGuards(JwtTenantGuard, RolesGuard)
-  @Roles('owner', 'admin', 'member')
   findOne(@Param('id') id: string) {
     return this.plansService.findOne(id);
   }
