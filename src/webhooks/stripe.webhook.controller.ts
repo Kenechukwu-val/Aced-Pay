@@ -9,16 +9,19 @@ import {
 } from '@nestjs/common';
 import { StripeService } from '../stripe/stripe.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { PaymentsService } from '../payments/payments.service';
 
 @Controller('webhooks/stripe')
 export class StripeWebhookController {
   constructor(
     private readonly stripeService: StripeService,
     private readonly subscriptionsService: SubscriptionsService,
+    private readonly paymentsService: PaymentsService,
   ) {}
 
   @Post()
   @HttpCode(HttpStatus.OK)
+  // No auth guard - Stripe signature verification handles authentication
   async handleWebhook(
     @Headers('stripe-signature') signature: string,
     @Body() body: any,
@@ -73,9 +76,17 @@ export class StripeWebhookController {
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object;
         const subscriptionId = invoice.subscription as string;
-        
+
         if (subscriptionId) {
           await this.subscriptionsService.handlePaymentSucceeded(subscriptionId);
+
+          // Create payment record from Stripe invoice
+          await this.paymentsService.createFromStripeWebhook(subscriptionId, {
+            amount: invoice.amount_paid,
+            currency: invoice.currency,
+            transactionId: invoice.id,
+            paymentMethod: invoice.payment_intent ? 'card' : undefined,
+          });
         }
         break;
       }

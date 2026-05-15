@@ -96,4 +96,36 @@ export class PaymentsService {
       data: { status },
     });
   }
+
+  // Create payment from Stripe webhook (invoice.payment_succeeded)
+  async createFromStripeWebhook(
+    subscriptionId: string,
+    data: {
+      amount: number;
+      currency: string;
+      transactionId: string;
+      paymentMethod?: string;
+    }
+  ) {
+    const subscription = await this.prisma.subscription.findFirst({
+      where: { externalId: subscriptionId },
+    });
+
+    if (!subscription) {
+      console.log(`[Payments] Subscription not found for external ID: ${subscriptionId}`);
+      return null;
+    }
+
+    return this.prisma.payment.create({
+      data: {
+        subscriptionId: subscription.id,
+        amount: data.amount,
+        currency: data.currency.toUpperCase(),
+        paymentMethod: data.paymentMethod || 'card',
+        transactionId: data.transactionId,
+        status: 'succeeded',
+        paidAt: new Date(),
+      },
+    });
+  }
 }
