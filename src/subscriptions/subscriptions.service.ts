@@ -4,13 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { StripeService } from '../stripe/stripe.service';
+import { PaystackService } from '../paystack/paystack.service';
 
 @Injectable()
 export class SubscriptionsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly stripeService: StripeService,
+    private readonly paystackService: PaystackService,
   ) {}
 
   async findAll(tenantId: string) {
@@ -44,59 +44,61 @@ export class SubscriptionsService {
 
     const owner = tenant.members[0].user;
     const plan = await this.prisma.plan.findUnique({ where: { id: planId } });
-    
+
     if (!plan) {
       throw new NotFoundException('Plan not found');
     }
 
-    // Get or create Stripe customer
+    const planCode = plan.paystackPlanCode;
+    if (!planCode) {
+      throw new BadRequestException('Plan is not configured for Paystack');
+    }
+
+    // Get or create Paystack customer
     let subscription = await this.prisma.subscription.findFirst({
       where: { tenantId },
       include: { tenant: true },
     });
 
-    let customerId: string;
-
     if (subscription?.externalCustomerId) {
-      customerId = subscription.externalCustomerId;
+      // Customer already exists, use their email
+      const customer = await this.paystackService.getCustomer(subscription.externalCustomerId);
+      // Use email for checkout
+      const session = await this.paystackService.createCheckoutSession(
+        customer.email,
+        planCode,
+        `${process.env.FRONTEND_URL}/subscription/success?reference={REFERENCE}`,
+      );
+
+      return { sessionId: session.reference, url: session.url };
     } else {
-      // Create new Stripe customer
-      const customer = await this.stripeService.createCustomer(
+      // Create new Paystack customer
+      const customer = await this.paystackService.createCustomer(
         owner.email,
         owner.name || undefined,
         { tenantId, ownerId: owner.id },
       );
-      customerId = customer.id;
+
+      // Create checkout session with customer code
+      const session = await this.paystackService.createCheckoutSession(
+        customer.customerCode,
+        planCode,
+        `${process.env.FRONTEND_URL}/subscription/success?reference={REFERENCE}`,
+      );
+
+      return { sessionId: session.reference, url: session.url };
     }
-
-    // Get the Stripe price ID from plan 
-    const stripePriceId = plan.features; 
-
-    if (!stripePriceId) {
-      throw new BadRequestException('Plan is not configured for Stripe billing');
-    }
-
-    // Create checkout session
-    const session = await this.stripeService.createCheckoutSession(
-      customerId,
-      stripePriceId,
-      `${process.env.FRONTEND_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-      `${process.env.FRONTEND_URL}/subscription/canceled`,
-    );
-
-    return { sessionId: session.id, url: session.url };
   }
 
-  async handleCheckoutComplete(tenantId: string, sessionId: string) {
-    const session = await this.stripeService.instance.checkout.sessions.retrieve(sessionId);
+  async handleCheckoutComplete(tenantId: string, reference: string) {
+    // Verify the transaction with Paystack
+    const transaction = await this.paystackService.verifyTransaction(reference);
 
-    if (!session.subscription) {
-      throw new BadRequestException('No subscription in session');
+    if (transaction.status !== 'success') {
+      throw new BadRequestException('Payment not successful');
     }
 
-    const stripeSubscription = await this.stripeService.getSubscription(session.subscription as string);
-
-    // Update subscription in database
+    // Get subscription from transaction metadata
     const subscription = await this.prisma.subscription.findFirst({
       where: { tenantId },
     });
@@ -105,16 +107,33 @@ export class SubscriptionsService {
       return this.prisma.subscription.update({
         where: { id: subscription.id },
         data: {
-          externalId: stripeSubscription.id,
-          externalCustomerId: session.customer as string,
+          externalId: transaction.subscription_id || transaction.id,
+          externalCustomerId: transaction.customer?.id,
           status: 'active',
-          currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
-          currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
         },
       });
     }
 
-    throw new NotFoundException('No subscription found for tenant');
+    // Create new subscription if none exists
+    const plan = await this.prisma.plan.findFirst();
+    if (!plan) {
+      throw new NotFoundException('No plan found. Please create a plan first.');
+    }
+
+    return this.prisma.subscription.create({
+      data: {
+        tenantId,
+        planId: plan.id,
+        status: 'active',
+        externalId: (transaction as any).subscription_id || transaction.id,
+        externalCustomerId: (transaction as any).customer?.id,
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      },
+      include: { plan: true },
+    });
   }
 
   async createPortalSession(tenantId: string, returnUrl: string) {
@@ -126,7 +145,7 @@ export class SubscriptionsService {
       throw new NotFoundException('No active subscription found');
     }
 
-    const session = await this.stripeService.createCustomerPortalSession(
+    const session = await this.paystackService.createCustomerPortalSession(
       subscription.externalCustomerId,
       returnUrl,
     );
@@ -143,9 +162,9 @@ export class SubscriptionsService {
       throw new NotFoundException(`Subscription with id '${id}' not found`);
     }
 
-    // Cancel at period end in Stripe
+    // Cancel in Paystack
     if (subscription.externalId) {
-      await this.stripeService.cancelSubscriptionAtPeriodEnd(subscription.externalId);
+      await this.paystackService.disableSubscription(subscription.externalId);
     }
 
     // Update database
@@ -223,7 +242,6 @@ export class SubscriptionsService {
       include: { plan: true },
     });
   }
-
 
   async delete(id: string, tenantId: string) {
     const subscription = await this.prisma.subscription.findFirst({

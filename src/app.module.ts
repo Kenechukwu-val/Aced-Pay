@@ -12,10 +12,10 @@ import { TenantMiddleware } from './common/tenant/tenant.middleware';
 import { TenantsService } from './tenants/tenants.service';
 import { TenantsController } from './tenants/tenants.controller';
 import { TenantsModule } from './tenants/tenants.module';
-import { StripeService } from './stripe/stripe.service';
-import { StripeModule } from './stripe/stripe.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { JwtTenantGuard } from './common/guards/jwt-tenant.guard';
+import { PaystackService } from './paystack/paystack.service';
+import { PaystackWebhookController } from './webhooks/paystack.webhook.controller';
 
 @Module({
   imports: [
@@ -27,14 +27,13 @@ import { JwtTenantGuard } from './common/guards/jwt-tenant.guard';
     PaymentsModule,
     PrismaModule,
     TenantsModule,
-    StripeModule,
     WebhooksModule,
   ],
-  controllers: [AppController, TenantsController],
-  providers: [AppService, JwtTenantGuard, TenantsService, StripeService],
+  controllers: [AppController, TenantsController, PaystackWebhookController],
+  providers: [AppService, JwtTenantGuard, TenantsService, PaystackService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(TenantMiddleware).exclude('webhooks/stripe').forRoutes('*');
+    consumer.apply(TenantMiddleware).exclude('webhooks/stripe', 'webhooks/paystack').forRoutes('*');
   }
 }

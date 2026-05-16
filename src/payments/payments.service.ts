@@ -97,8 +97,8 @@ export class PaymentsService {
     });
   }
 
-  // Create payment from Stripe webhook (invoice.payment_succeeded)
-  async createFromStripeWebhook(
+  // Create payment from Paystack webhook
+  async createFromPaystackWebhook(
     subscriptionId: string,
     data: {
       amount: number;
@@ -112,7 +112,7 @@ export class PaymentsService {
     });
 
     if (!subscription) {
-      console.log(`[Payments] Subscription not found for external ID: ${subscriptionId}`);
+      console.log(`[Payments] Subscription not found for ID: ${subscriptionId}`);
       return null;
     }
 
