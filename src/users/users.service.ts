@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -77,19 +78,19 @@ export class UsersService {
   }
 
   async login(loginDto: LoginDto) {
-  const user = await this.prisma.user.findUnique({
-    where: { email: loginDto.email },
-  });
+    const user = await this.prisma.user.findUnique({
+      where: { email: loginDto.email },
+    });
 
-  if (!user) {
-    throw new UnauthorizedException('Invalid credentials');
-  }
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
-  if (!user.password) {
-    throw new UnauthorizedException('Invalid credentials');
-  }
+    if (!user.password) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
-  const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
 
   if (!isPasswordValid) {
     throw new UnauthorizedException('Invalid credentials');
@@ -161,10 +162,25 @@ export class UsersService {
     return user;
   }
 
-  async update(id: string, data: { name?: string }) {
+  async update(id: string, data: { name?: string; email?: string; password?: string }) {
+    // Validate that data is provided
+    if (!data) {
+      throw new BadRequestException('Request body is required');
+    }
+
+    // Validate that at least one field is provided
+    if (!data.name && !data.email && !data.password) {
+      throw new BadRequestException('At least one field (name, email, or password) is required');
+    }
+
+    const updateData: any = {};
+    if (data.name) updateData.name = data.name;
+    if (data.email) updateData.email = data.email;
+    if (data.password) updateData.password = data.password;
+
     const user = await this.prisma.user.update({
       where: { id },
-      data,
+      data: updateData,
       select: {
         id: true,
         email: true,
