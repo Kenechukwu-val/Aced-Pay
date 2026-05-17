@@ -101,9 +101,14 @@ export class PaystackService {
     // Verify transaction (for checkout completion)
     async verifyTransaction(reference: string): Promise<any> {
         const response = await this.paystack.transaction.verify(reference) as any;
-        
+
+        // Log full response for debugging
+        console.log('Paystack verify response:', JSON.stringify(response));
+
         if (!response.status) {
-            throw new Error(response.message || 'Failed to verify transaction');
+            const errorMsg = response.message || 'Failed to verify transaction';
+            console.error('Paystack verify error:', errorMsg);
+            throw new Error(errorMsg);
         }
 
         return response.data;
