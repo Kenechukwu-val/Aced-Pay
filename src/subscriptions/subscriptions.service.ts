@@ -207,6 +207,12 @@ export class SubscriptionsService {
   }
 
   async create(tenantId: string, planId: string) {
+    // Validate tenant exists
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
+    if (!tenant) {
+      throw new NotFoundException(`Tenant with id '${tenantId}' not found`);
+    }
+
     const plan = await this.prisma.plan.findUnique({ where: { id: planId } });
     if (!plan) {
       throw new NotFoundException(`Plan with id '${planId}' not found`);
