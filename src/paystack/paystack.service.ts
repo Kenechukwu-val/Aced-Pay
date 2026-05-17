@@ -144,4 +144,41 @@ export class PaystackService {
             .digest('hex');
         return hash === signature;
     }
+
+    // Create a plan in Paystack
+    async createPlan(
+        name: string,
+        amount: number,
+        interval: 'daily' | 'weekly' | 'monthly' | 'annually',
+        description?: string,
+    ): Promise<{ planCode: string; name: string; amount: number; interval: string }> {
+        const response = await this.paystack.plan.create({
+            name,
+            amount: amount * 100, // Paystack uses kobo
+            interval,
+            description,
+        }) as any;
+
+        if (!response.status) {
+            throw new Error(response.message || 'Failed to create Paystack plan');
+        }
+
+        return {
+            planCode: response.data.plan_code,
+            name: response.data.name,
+            amount: response.data.amount,
+            interval: response.data.interval,
+        };
+    }
+
+    // Get a plan from Paystack
+    async getPlan(planCode: string): Promise<any> {
+        const response = await this.paystack.plan.fetch(planCode) as any;
+
+        if (!response.status) {
+            throw new Error(response.message || 'Failed to fetch Paystack plan');
+        }
+
+        return response.data;
+    }
 }
